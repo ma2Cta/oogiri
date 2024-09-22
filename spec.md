@@ -5,10 +5,10 @@
 
 ## 2. システム構成
 - **フロントエンド**: Next.js（TypeScript）、Tailwind CSS、shadcn/ui
-- **バックエンド**: Rust（AWS Lambda上で動作）
-  - **フレームワーク**: `aws-lambda-rust-runtime`、`lambda_http`
-- **データベース**: AWS DynamoDB
-- **インフラストラクチャ**: AWS S3、CloudFront、AWS Lambda、AWS API Gateway
+- **バックエンド**: Rust
+  - **フレームワーク**: Actix-web
+- **データベース**: PostgreSQL
+- **インフラストラクチャ**: AWS ECS（Fargate）、AWS RDS、AWS S3、CloudFront
 - **AIサービス**: OpenAI API
 
 ## 3. 機能仕様
@@ -72,7 +72,7 @@
 ## 5. 技術仕様
 
 ### 5.1 フロントエンド
-- **フレームワーク**: Next.js（TypeScript）
+- **フレ��ムワーク**: Next.js（TypeScript）
 - **スタイル**: Tailwind CSS、shadcn/ui
 - **ユーザー識別**:
   - 初回アクセス時にUUIDを生成し、`UserID`としてCookieまたはLocalStorageに保存。
@@ -80,9 +80,9 @@
 
 ### 5.2 バックエンド
 - **言語**: Rust
-- **実行環境**: AWS Lambda（サーバーレス）
-- **フレームワーク**: `aws-lambda-rust-runtime`、`lambda_http`
-- **API管理**: AWS API Gatewayを利用
+- **実行環境**: Docker コンテナ（AWS ECS Fargate上で実行）
+- **フレームワーク**: Actix-web
+- **API管理**: Actix-webのルーティング機能を利用
 - **機能**:
   - お題生成（OpenAI APIとの連携）
   - 回答と投票の受け取りと保存
@@ -90,19 +90,25 @@
   - ユーザー識別の管理（`UserID`の受け取りと検証）
 
 ### 5.3 データベース
-- **データストア**: AWS DynamoDB
+- **データストア**: PostgreSQL（AWS RDS）
 - **設計**:
-  - **Gamesテーブル**:
-    - パーティションキー: `GameID`（文字列）
-    - 属性: お題、開始時間、終了時間、ステータス
-  - **Answersテーブル**:
-    - パーティションキー: `GameID`（文字列）
-    - ソートキー: `UserID`（文字列）
-    - 属性: 回答内容、提出時間
-  - **Votesテーブル**:
-    - パーティションキー: `GameID`（文字列）
-    - ソートキー: `AnswerID`（文字列）
-    - 属性: 投票者の`UserID`リスト
+  - **Games**テーブル:
+    - id: UUID（プライマリーキー）
+    - theme: TEXT
+    - start_time: TIMESTAMP
+    - end_time: TIMESTAMP
+    - status: ENUM('waiting', 'in_progress', 'finished')
+  - **Answers**テーブル:
+    - id: UUID（プライマリーキー）
+    - game_id: UUID（外部キー）
+    - user_id: UUID
+    - content: TEXT
+    - submitted_at: TIMESTAMP
+  - **Votes**テーブル:
+    - id: UUID（プライマリーキー）
+    - game_id: UUID（外部キー）
+    - answer_id: UUID（外部キー）
+    - voter_id: UUID
 - **ユーザー識別**:
   - `UserID`はクライアントで生成されたUUIDを使用。
 
@@ -119,7 +125,8 @@
   - 成功時にAWSへの自動デプロイ
 
 ### 5.6 開発環境
-- **ローカル環境**: Dockerを利用
+- **ローカル環境**: Docker Composeを利用
+  - Rustアプリケーション、PostgreSQLデータベース、Next.jsアプリケーションをコンテナ化
 - **パッケージ管理**:
   - フロントエンド: `npm`（`package.json`）
   - バックエンド: `Cargo`（`Cargo.toml`）
@@ -147,23 +154,37 @@
 - **Answer ↔ Vote**: `AnswerID`で関連付け
 
 ## 7. インフラストラクチャ
+- **AWS ECS (Fargate)**: バックエンドのコンテナ実行環境
+- **AWS RDS**: PostgreSQLデータベース
 - **AWS S3**: フロントエンドの静的ファイルホスティング
 - **AWS CloudFront**: グローバルなコンテンツ配信ネットワーク
-- **AWS Lambda**: バックエンド処理（`aws-lambda-rust-runtime`、`lambda_http`を使用）
-- **AWS API Gateway**: APIエンドポイントの提供
-- **AWS DynamoDB**: データストレージ
 - **OpenAI API**: お題生成のAIサービス
 
 ## 8. テスト戦略
 
 ### 8.1 単体テスト
 - **バックエンド**:
-  - Lambda関数ごとのロジックテスト
-  - DynamoDBとのデータ操作のテスト
+  - Actix-webのハンドラーのロジックテスト
+  - データベース操作のテスト
 - **フロントエンド**:
   - コンポーネントのレンダリングテスト
   - ユーザー操作のシミュレーション
 
 ### 8.2 テストツール
-- **バックエンド**: Rustの標準テストフレームワーク
+- **バックエンド**: Rustの標準テストフレームワーク、`actix-rt`テストユーティリティ
 - **フロントエンド**: Jest、React Testing Library
+
+## 9. 開発環境
+- **ローカル環境**: Docker Composeを利用
+  - Rustアプリケーション、PostgreSQLデータベース、Next.jsアプリケーションをコンテナ化
+- **パッケージ管理**:
+  - フロントエンド: `npm`（`package.json`）
+  - バックエンド: `Cargo`（`Cargo.toml`）
+
+## 10. デプロイメントプロセス
+1. GitHubリポジトリへのプッシュ
+2. GitHub Actionsによる自動ビルドとテスト
+3. テスト成功時、DockerイメージをAWS ECRにプッシュ
+4. AWS ECS（Fargate）へのデプロイ
+5. フロントエンドのビルドとAWS S3へのアップロード
+6. CloudFrontのキャッシュ無効化
