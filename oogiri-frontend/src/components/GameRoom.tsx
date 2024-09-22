@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { GameData, Answer } from '@/types/game';
 
 interface GameRoomProps {
   gameId: string;
@@ -8,38 +9,15 @@ interface GameRoomProps {
   gameData: GameData;
 }
 
-interface GameData {
-  // ゲームデータの具体的なプロパティをここに定義
-  id: string;
-  players: string[];
-  currentRound: number;
-  gameStatus: string; // または適切な型（例：'waiting' | 'active' | 'finished'）
-  theme: string;
-  // 他の必要なプロパティを追加
-}
-
 export default function GameRoom({ gameId, userId, gameData }: GameRoomProps) {
-  const [answer, setAnswer] = useState('');
-  const [answers, setAnswers] = useState([]);
-  const [gameStatus, setGameStatus] = useState(gameData.gameStatus);
+  const [answer, setAnswer] = useState<string>('');
+  const [answers, setAnswers] = useState<Answer[]>(gameData.answers || []);
+  const [gameStatus, setGameStatus] = useState<GameData['status']>(gameData.status);
 
   useEffect(() => {
-    // ゲームの状態を監視し、更新する
-    const updateGameStatus = async () => {
-      try {
-        const response = await fetch(`/api/games/${gameId}/status`);
-        if (!response.ok) throw new Error('ゲーム状態の取得に失敗しました');
-        const { status } = await response.json();
-        setGameStatus(status);
-      } catch (error) {
-        console.error('ゲーム状態取得エラー:', error);
-      }
-    };
-
-    const intervalId = setInterval(updateGameStatus, 5000); // 5秒ごとに更新
-
-    return () => clearInterval(intervalId);
-  }, [gameId]);
+    setAnswers(gameData.answers || []);
+    setGameStatus(gameData.status);
+  }, [gameData]);
 
   const submitAnswer = async () => {
     try {
@@ -93,25 +71,17 @@ export default function GameRoom({ gameId, userId, gameData }: GameRoomProps) {
           <Button onClick={submitAnswer}>回答を送信</Button>
         </div>
       )}
-      {gameStatus === 'voting' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-2">回答一覧</h2>
-          <ul>
-            {answers.map((answer: any) => (
-              <li key={answer.id} className="mb-2">
-                {answer.content}
-                <Button onClick={() => voteForAnswer(answer.id)} className="ml-2">
-                  投票
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
       {gameStatus === 'finished' && (
         <div>
           <h2 className="text-xl font-semibold mb-2">結果発表</h2>
-          {/* 結果表示のロジックを実装 */}
+          <ul>
+            {answers.map((ans) => (
+              <li key={ans.id}>
+                {ans.content}
+                <Button onClick={() => voteForAnswer(ans.id)}>投票</Button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

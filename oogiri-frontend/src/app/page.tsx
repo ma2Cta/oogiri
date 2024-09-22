@@ -4,24 +4,34 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
 export default function Home() {
-  const [gameId, setGameId] = useState('');
+  const [gameId, setGameId] = useState<string>('');
   const router = useRouter();
 
-  const createGame = async () => {
-    // TODO: バックエンドAPIを呼び出してゲームを作成
-    console.log('ゲームを作成');
-    // 仮のゲームID生成（実際にはバックエンドから取得する）
-    const newGameId = Math.random().toString(36).substring(7);
-    router.push(`/game/${newGameId}`);
+  const createGame = async (): Promise<void> => {
+    try {
+      const response = await axios.post<{ game_id: string }>(`${API_BASE_URL}/api/create_game`);
+      const newGameId = response.data.game_id;
+      router.push(`/game/${newGameId}`);
+    } catch (error) {
+      console.error('ゲーム作成エラー:', error);
+      alert('ゲームの作成に失敗しました。');
+    }
   };
 
-  const joinGame = async () => {
+  const joinGame = async (): Promise<void> => {
     if (gameId) {
-      // TODO: 入力されたゲームIDの有効性を確認
-      console.log(`ゲームに参加: ${gameId}`);
-      router.push(`/game/${gameId}`);
+      try {
+        const response = await axios.post<{ game_id: string }>(`${API_BASE_URL}/api/join_game`, { game_id: gameId });
+        router.push(`/game/${response.data.game_id}`);
+      } catch (error) {
+        console.error('ゲーム参加エラー:', error);
+        alert('ゲームの参加に失敗しました。');
+      }
     } else {
       alert('ゲームIDを入力してください。');
     }
