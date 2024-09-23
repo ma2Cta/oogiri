@@ -31,3 +31,18 @@ pub async fn get_game_data(game_id: web::Path<String>) -> impl Responder {
 
     HttpResponse::Ok().json(game_data)
 }
+
+// 新しい構造体を追加
+#[derive(serde::Serialize)]
+struct HealthCheckResponse {
+    status: String,
+    message: String,
+}
+
+pub async fn health_check() -> impl Responder {
+    let response = HealthCheckResponse {
+        status: "healthy".to_string(),
+        message: "サーバーは正常に動作しています".to_string(),
+    };
+    HttpResponse::Ok().json(response)
+}
