@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { Game } from '@/types/game';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
@@ -14,8 +15,8 @@ export default function Home() {
 
   const createGame = async (): Promise<void> => {
     try {
-      const response = await axios.post<{ game_id: string }>(`${API_BASE_URL}/api/create_game`);
-      const newGameId = response.data.game_id;
+      const response = await axios.post<Game>(`${API_BASE_URL}/api/create_game`);
+      const newGameId = response.data.id;
       router.push(`/game/${newGameId}`);
     } catch (error) {
       console.error('ゲーム作成エラー:', error);
@@ -26,8 +27,8 @@ export default function Home() {
   const joinGame = async (): Promise<void> => {
     if (gameId) {
       try {
-        const response = await axios.post<{ game_id: string }>(`${API_BASE_URL}/api/join_game`, { game_id: gameId });
-        router.push(`/game/${response.data.game_id}`);
+        const response = await axios.post<Game>(`${API_BASE_URL}/api/join_game`, { game_id: gameId });
+        router.push(`/game/${response.data.id}`);
       } catch (error) {
         console.error('ゲーム参加エラー:', error);
         alert('ゲームの参加に失敗しました。');
@@ -57,9 +58,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <footer className="mt-8 text-center text-sm text-gray-500">
-        © 2024 大喜利アプリ. All rights reserved.
-      </footer>
     </div>
   );
 }

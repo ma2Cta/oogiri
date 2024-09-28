@@ -1,7 +1,7 @@
-export interface GameData {
+export interface Game {
   id: string;
   status: 'waiting' | 'in_progress' | 'finished';
-  players: Player[];
+  playerIds: string[];
   currentRound: number;
   totalRounds: number;
   theme: string;
@@ -18,4 +18,9 @@ export interface Answer {
   id: string;
   content: string;
   playerId: string;
+}
+
+export interface JoinGameRequest {
+  gameId: string;
+  username: string;
 }

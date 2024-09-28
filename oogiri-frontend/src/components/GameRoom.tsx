@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { GameData, Answer } from '@/types/game';
+import { Game, Answer } from '@/types/game';
 
 interface GameRoomProps {
   gameId: string;
   userId: string;
-  gameData: GameData;
+  gameData: Game;
 }
 
 export default function GameRoom({ gameId, userId, gameData }: GameRoomProps) {
   const [answer, setAnswer] = useState<string>('');
   const [answers, setAnswers] = useState<Answer[]>(gameData.answers || []);
-  const [gameStatus, setGameStatus] = useState<GameData['status']>(gameData.status);
+  const [gameStatus, setGameStatus] = useState<Game['status']>(gameData.status);
 
   useEffect(() => {
     setAnswers(gameData.answers || []);

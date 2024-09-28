@@ -2,11 +2,11 @@ package main
 
 import (
 	"log"
-	"os" // 追加
+	"os"
 	"oogiri-backend/src/handlers"
 	"oogiri-backend/src/utils"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware" // 追加
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -17,7 +17,8 @@ func main() {
 		log.Fatalf("Failed to initialize Firestore: %v", err)
 	}
 
-	e.POST("/api/create_game", handlers.CreateGame)
+	e.POST("/api/create_game", handlers.CreateGameHandler)
+	e.GET("/api/games/:gameId", handlers.GetGameHandler)
 
 	// 環境変数からオリジンを取得
 	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")

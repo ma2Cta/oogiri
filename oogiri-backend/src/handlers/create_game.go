@@ -6,29 +6,47 @@ import (
 	"time"
 	"github.com/google/uuid"
 	"oogiri-backend/src/utils"
+	"oogiri-backend/src/models" // 追加
 	"github.com/labstack/echo/v4"
-	"log"  // 追加
+	"log"
 )
 
 // CreateGame はゲームを作成するためのハンドラです
-func CreateGame(c echo.Context) error {
-	log.Println("CreateGame handler started")  // デバッグログ追加
+func CreateGameHandler(c echo.Context) error {
+	log.Println("CreateGame handler started")
 
 	ctx := context.Background()
-	gameId := uuid.New().String()  // UUIDを生成
-	log.Printf("Generated gameId: %s", gameId)  // デバッグログ追加
+	gameId := uuid.New().String()
+	log.Printf("Generated gameId: %s", gameId)
 
-	game := map[string]interface{}{
-		"gameId": gameId,
-		"createdAt": time.Now(),
+	game := models.Game{
+		ID:          gameId,
+		CreatedAt:   time.Now().Unix(),
+		UpdatedAt:   time.Now().Unix(),
+		Status:      "waiting",
+		PlayerIDs:     []string{},
+		CurrentRound: 0,
+		TotalRounds:  0,
+		Theme:       "",
+		Answers:     []models.Answer{},
 	}
 
 	_, _, err := utils.FirestoreClient.Collection("games").Add(ctx, game)
 	if err != nil {
-		log.Printf("Failed to create game: %v", err)  // デバッグログ追加
+		log.Printf("Failed to create game: %v", err)
 		return c.String(http.StatusInternalServerError, "Failed to create game")
 	}
 
-	log.Println("Game created successfully")  // デバッグログ追加
-	return c.String(http.StatusOK, "Game created")
+	log.Println("Game created successfully")
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"id":           game.ID,
+		"createdAt":    game.CreatedAt,
+		"updatedAt":    game.UpdatedAt,
+		"status":       game.Status,
+		"playerIds":    game.PlayerIDs,
+		"currentRound": game.CurrentRound,
+		"totalRounds":  game.TotalRounds,
+		"theme":        game.Theme,
+		"answers":      game.Answers,
+	})
 }
