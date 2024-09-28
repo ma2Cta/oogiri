@@ -5,9 +5,10 @@ import GameRoom from '@/components/GameRoom';
 import { Game } from '@/types/game';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton'; // 追加
+import { Skeleton } from '@/components/ui/skeleton';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
-export default function GamePage({ params }: { params: { gameId: string } }) {
+export default function GamePreparationPage({ params }: { params: { gameId: string } }) {
   const { gameId } = params;
   const [userId, setUserId] = useState<string>('');
   const [game, setGame] = useState<Game | null>(null);
@@ -41,7 +42,6 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 
   const handleJoinGame = async () => {
     try {
-      await joinGame(gameId, username);
       alert('ゲームに参加しました');
     } catch (error) {
       console.error('ゲーム参加エラー:', error);
@@ -59,6 +59,19 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 
   return (
     <div className="flex flex-col items-center p-6 space-y-4">
+      <Breadcrumb className="self-start">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">ホーム</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>
+              ゲーム準備画面
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <GameRoom gameId={gameId as string} userId={userId} gameData={game} />
       <div className="flex flex-col items-center space-y-2 w-full max-w-md">
         <Input

@@ -17,7 +17,7 @@ export default function Home() {
     try {
       const response = await axios.post<Game>(`${API_BASE_URL}/api/create_game`);
       const newGameId = response.data.id;
-      router.push(`/game/${newGameId}`);
+      router.push(`/game/${newGameId}/preparation`);
     } catch (error) {
       console.error('ゲーム作成エラー:', error);
       alert('ゲームの作成に失敗しました。');
@@ -28,7 +28,7 @@ export default function Home() {
     if (gameId) {
       try {
         const response = await axios.post<Game>(`${API_BASE_URL}/api/join_game`, { game_id: gameId });
-        router.push(`/game/${response.data.id}`);
+        router.push(`/game/${response.data.id}/preparation`);
       } catch (error) {
         console.error('ゲーム参加エラー:', error);
         alert('ゲームの参加に失敗しました。');
